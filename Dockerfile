@@ -49,4 +49,10 @@ COPY --from=builder /usr/local/openresty /usr/local/openresty
 
 EXPOSE 80
 
+# CMD ["/usr/local/openresty/bin/openresty", "-g", "daemon off;"]
+COPY nginx.vh.default.conf /nginx.vh.default.conf
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["/usr/local/openresty/bin/openresty", "-g", "daemon off;"]
