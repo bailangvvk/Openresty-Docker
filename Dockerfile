@@ -47,8 +47,8 @@ RUN make -j$(nproc) && make install
 # -------- 运行镜像 ----------
 FROM scratch AS final
 
-COPY --from=builder /opt/openresty /opt/openresty
-COPY nginx.conf /opt/openresty/nginx/conf/nginx.conf
+# COPY --from=builder /opt/openresty /opt/openresty
+# COPY nginx.conf /opt/openresty/nginx/conf/nginx.conf
 
 ENV PATH=/opt/openresty/nginx/sbin:$PATH
 
