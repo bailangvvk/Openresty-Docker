@@ -3,7 +3,7 @@ name: Build & Push OpenResty Static
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   workflow_dispatch:
 
 env:
