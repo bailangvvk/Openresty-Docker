@@ -1,12 +1,12 @@
-FROM alpine:3.18 AS builder
-
-ARG OPENRESTY_VERSION
+ARG OPENRESTY_VERSION=1.27.1.2
 ARG OPENSSL_VERSION=3.3.1
 ARG ZLIB_VERSION=1.3.1
 
+FROM alpine:3.18 AS builder
+
 RUN apk add --no-cache \
     build-base perl curl git tar \
-    pcre-dev linux-headers
+    pcre-dev linux-headers zlib-dev openssl-dev
 
 WORKDIR /tmp
 
@@ -17,11 +17,9 @@ RUN curl -fSL https://openresty.org/download/openresty-${OPENRESTY_VERSION}.tar.
 
 WORKDIR /tmp/openresty-${OPENRESTY_VERSION}
 
-# 编译
+# 编译（去掉 -static，动态编译）
 RUN ./configure \
     --prefix=/opt/openresty \
-    --with-cc-opt="-static" \
-    --with-ld-opt="-static" \
     --with-openssl=/tmp/openssl-${OPENSSL_VERSION} \
     --with-zlib=/tmp/zlib-${ZLIB_VERSION} \
     --with-luajit \
@@ -42,24 +40,25 @@ RUN ./configure \
 
 RUN make -j$(nproc) && make install
 
-# =================== 最终镜像 ===================
+# ------------- 运行镜像 -------------
 FROM alpine:3.18
 
-# 添加 envsubst 所需的 gettext
-RUN apk add --no-cache gettext
+RUN apk add --no-cache bash gettext
 
 ENV PATH="/opt/openresty/nginx/sbin:$PATH"
 ENV NGINX_PORT=8080
 
-# 添加动态端口启动器
+# 复制编译好的 OpenResty
+COPY --from=builder /opt/openresty /opt/openresty
+
+# 复制并赋权启动脚本
 COPY docker-entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# 添加 nginx 配置（用 envsubst 预处理监听端口）
+# 复制 nginx 配置模板
 COPY nginx.template.conf /nginx.template.conf
 
-COPY --from=builder /opt/openresty /opt/openresty
-
 EXPOSE 8080
+
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
