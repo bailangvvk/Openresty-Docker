@@ -1,66 +1,62 @@
-# 构建阶段
-FROM alpine:3.18 AS builder
+# ---------- Stage 1: Build OpenResty ----------
+FROM alpine:3.20 as builder
 
-ARG OPENRESTY_VERSION=1.27.1.2
-ARG OPENSSL_VERSION=3.3.8
-ARG ZLIB_VERSION=1.3
-
-RUN apk add --no-cache \
-    build-base perl curl git tar \
-    pcre-dev linux-headers
+ARG RESTY_VERSION=1.27.1.2
+ARG RESTY_OPENSSL_VERSION=1.1.1w
+ARG RESTY_PCRE_VERSION=8.45
+ARG RESTY_J=2
 
 WORKDIR /tmp
 
+RUN apk add --no-cache build-base curl perl tar \
+    libtool automake autoconf pkgconf \
+    pcre-dev zlib-dev linux-headers
+
 # 下载源码包
-RUN curl -fSL https://openresty.org/download/openresty-${OPENRESTY_VERSION}.tar.gz | tar xz && \
-    curl -fSL https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz | tar xz && \
-    curl -fSL https://zlib.net/zlib-${ZLIB_VERSION}.tar.gz | tar xz
+RUN curl -sSL https://openresty.org/download/openresty-${RESTY_VERSION}.tar.gz | tar xz && \
+    curl -sSL https://www.openssl.org/source/old/1.1.1/openssl-${RESTY_OPENSSL_VERSION}.tar.gz | tar xz && \
+    curl -sSL https://downloads.sourceforge.net/project/pcre/pcre/${RESTY_PCRE_VERSION}/pcre-${RESTY_PCRE_VERSION}.tar.gz | tar xz
 
-WORKDIR /tmp/openresty-${OPENRESTY_VERSION}
+# 编译
+WORKDIR /tmp/openresty-${RESTY_VERSION}
 
-# 配置编译（不强制静态编译，保持动态模块）
 RUN ./configure \
-    --prefix=/opt/openresty \
-    --with-openssl=/tmp/openssl-${OPENSSL_VERSION} \
-    --with-zlib=/tmp/zlib-${ZLIB_VERSION} \
+    --prefix=/usr/local/openresty \
+    --with-pcre=/tmp/pcre-${RESTY_PCRE_VERSION} \
+    --with-openssl=/tmp/openssl-${RESTY_OPENSSL_VERSION} \
     --with-luajit \
     --with-http_ssl_module \
-    --with-http_realip_module \
     --with-http_stub_status_module \
+    --with-http_realip_module \
     --with-threads \
-    --with-file-aio \
-    --without-http_browser_module \
-    --without-http_memcached_module \
-    --without-http_geo_module \
-    --without-http_proxy_module \
-    --without-http_auth_basic_module \
-    --without-http_userid_module \
-    --without-lua_resty_memcached \
-    --without-lua_resty_redis \
-    --without-lua_resty_dns
+    --with-stream \
+    --with-stream_ssl_module \
+    --with-pcre-jit \
+    --with-cc-opt="-Os -fomit-frame-pointer" \
+    --with-ld-opt="-Wl,--as-needed" \
+    --without-http_browser_module
 
-RUN make -j$(nproc) && make install
+RUN make -j${RESTY_J} && make install
 
-# ==================== 运行阶段 ====================
-FROM alpine:3.18
+# ---------- Stage 2: Final image (scratch base + alpine rootfs) ----------
+FROM scratch
 
-# 安装依赖：bash、gettext（用于 envsubst）
-RUN apk add --no-cache bash gettext
+ADD https://dl-cdn.alpinelinux.org/alpine/v3.20/releases/x86_64/alpine-minirootfs-3.20.6-x86_64.tar.gz /
 
-ENV PATH="/opt/openresty/nginx/sbin:$PATH"
-ENV NGINX_PORT=8080
+LABEL maintainer="你 <your@email.com>" \
+      resty_version="${RESTY_VERSION}" \
+      resty_openssl_version="${RESTY_OPENSSL_VERSION}" \
+      resty_pcre_version="${RESTY_PCRE_VERSION}"
 
-# 拷贝编译好的 openresty
-COPY --from=builder /opt/openresty /opt/openresty
+ENV PATH=/usr/local/openresty/nginx/sbin:/usr/local/openresty/luajit/bin:/usr/local/openresty/bin:$PATH
 
-# 拷贝模板配置文件
-COPY nginx.template.conf /nginx.template.conf
+COPY --from=builder /usr/local/openresty /usr/local/openresty
 
-# 拷贝启动脚本
-COPY docker-entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# 可选：添加自定义配置
+COPY nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
+COPY nginx.vh.default.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 8080
+EXPOSE 80
 
-ENTRYPOINT ["/entrypoint.sh"]
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["/usr/local/openresty/bin/openresty", "-g", "daemon off;"]
+STOPSIGNAL SIGQUIT
