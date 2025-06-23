@@ -39,24 +39,13 @@ RUN ./configure \
 RUN make -j${RESTY_J} && make install
 
 # ---------- Stage 2: Final image (scratch base + alpine rootfs) ----------
-FROM scratch
+FROM alpine:3.18
 
-ADD https://dl-cdn.alpinelinux.org/alpine/v3.20/releases/x86_64/alpine-minirootfs-3.20.6-x86_64.tar.gz /
+RUN apk add --no-cache libgcc libstdc++ libcrypto3 libssl3 pcre zlib
 
-LABEL maintainer="你 <your@email.com>" \
-      resty_version="${RESTY_VERSION}" \
-      resty_openssl_version="${RESTY_OPENSSL_VERSION}" \
-      resty_pcre_version="${RESTY_PCRE_VERSION}"
-
-ENV PATH=/usr/local/openresty/nginx/sbin:/usr/local/openresty/luajit/bin:/usr/local/openresty/bin:$PATH
+ENV PATH="/usr/local/openresty/nginx/sbin:/usr/local/openresty/bin:$PATH"
 
 COPY --from=builder /usr/local/openresty /usr/local/openresty
 
-# 可选：添加自定义配置
-COPY nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
-COPY nginx.vh.default.conf /etc/nginx/conf.d/default.conf
-
 EXPOSE 80
-
 CMD ["/usr/local/openresty/bin/openresty", "-g", "daemon off;"]
-STOPSIGNAL SIGQUIT
