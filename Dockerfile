@@ -49,11 +49,11 @@ ENV PATH="/opt/openresty/nginx/sbin:$PATH"
 ENV NGINX_PORT=8080
 
 # 添加动态端口启动器
-COPY docker-entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# COPY docker-entrypoint.sh /entrypoint.sh
+# RUN chmod +x /entrypoint.sh
 
 # 添加 nginx 配置（用 envsubst 预处理监听端口）
-COPY nginx.template.conf /nginx.template.conf
+# COPY nginx.template.conf /nginx.template.conf
 
 COPY --from=builder /opt/openresty /opt/openresty
 
