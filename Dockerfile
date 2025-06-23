@@ -1,13 +1,19 @@
-ARG OPENRESTY_VERSION=1.27.1.2
-ARG OPENSSL_VERSION=3.1.3
-ARG PCRE_VERSION=8.45
-
+# ---------- Stage 1: Build OpenResty ----------
 FROM alpine:3.20 AS builder
 
-RUN apk add --no-cache build-base curl perl tar libtool automake autoconf pkgconf pcre-dev zlib-dev linux-headers
+ARG OPENRESTY_VERSION
+ARG OPENSSL_VERSION=3.1.3
+ARG PCRE_VERSION=8.45
+ARG MAKE_JOBS=2
+
+RUN apk add --no-cache \
+    build-base curl perl tar \
+    libtool automake autoconf pkgconf \
+    pcre-dev zlib-dev linux-headers
 
 WORKDIR /tmp
 
+# 下载源码包并解压
 RUN curl -sSL https://openresty.org/download/openresty-${OPENRESTY_VERSION}.tar.gz | tar xz && \
     curl -sSL https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz | tar xz && \
     curl -sSL https://downloads.sourceforge.net/project/pcre/pcre/${PCRE_VERSION}/pcre-${PCRE_VERSION}.tar.gz | tar xz
@@ -30,8 +36,9 @@ RUN ./configure \
     --with-ld-opt="-Wl,--as-needed" \
     --without-http_browser_module
 
-RUN make -j${BUILD_JOBS} && make install
+RUN make -j${MAKE_JOBS} && make install
 
+# ---------- Stage 2: Runtime image ----------
 FROM alpine:3.18
 
 RUN apk add --no-cache libgcc libstdc++ libcrypto3 libssl3 pcre zlib
