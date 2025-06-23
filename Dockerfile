@@ -9,6 +9,7 @@ ARG LUAJIT_INC=/usr/local/include/luajit-2.1
 
 RUN apk add --no-cache \
     build-base \
+    perl \
     pcre-dev \
     openssl-dev \
     zlib-dev \
