@@ -1,9 +1,9 @@
-# ---------- builder 阶段 ----------
+# 构建阶段
 FROM alpine:3.18 AS builder
 
-ARG OPENRESTY_VERSION
-ARG OPENSSL_VERSION=3.3.1
-ARG ZLIB_VERSION=1.3.1
+ARG OPENRESTY_VERSION=1.27.1.2
+ARG OPENSSL_VERSION=3.3.8
+ARG ZLIB_VERSION=1.3
 
 RUN apk add --no-cache \
     build-base perl curl git tar \
@@ -11,18 +11,16 @@ RUN apk add --no-cache \
 
 WORKDIR /tmp
 
-# 下载源码包（版本号通过构建参数传入）
+# 下载源码包
 RUN curl -fSL https://openresty.org/download/openresty-${OPENRESTY_VERSION}.tar.gz | tar xz && \
     curl -fSL https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz | tar xz && \
     curl -fSL https://zlib.net/zlib-${ZLIB_VERSION}.tar.gz | tar xz
 
 WORKDIR /tmp/openresty-${OPENRESTY_VERSION}
 
-# 编译 OpenResty，静态链接 OpenSSL 和 zlib
+# 配置编译（不强制静态编译，保持动态模块）
 RUN ./configure \
     --prefix=/opt/openresty \
-    --with-cc-opt="-static" \
-    --with-ld-opt="-static" \
     --with-openssl=/tmp/openssl-${OPENSSL_VERSION} \
     --with-zlib=/tmp/zlib-${ZLIB_VERSION} \
     --with-luajit \
@@ -43,25 +41,26 @@ RUN ./configure \
 
 RUN make -j$(nproc) && make install
 
-# ---------- 运行镜像 ----------
+# ==================== 运行阶段 ====================
 FROM alpine:3.18
+
+# 安装依赖：bash、gettext（用于 envsubst）
+RUN apk add --no-cache bash gettext
 
 ENV PATH="/opt/openresty/nginx/sbin:$PATH"
 ENV NGINX_PORT=8080
 
-RUN apk add --no-cache gettext
-
-# 复制 OpenResty 编译产物
+# 拷贝编译好的 openresty
 COPY --from=builder /opt/openresty /opt/openresty
 
-# 复制并赋权入口脚本（负责用 envsubst 替换端口）
+# 拷贝模板配置文件
+COPY nginx.template.conf /nginx.template.conf
+
+# 拷贝启动脚本
 COPY docker-entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# 复制 nginx 配置模板，里面 listen 端口用变量占位
-COPY nginx.template.conf /nginx.template.conf
-
-EXPOSE ${NGINX_PORT}
+EXPOSE 8080
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
