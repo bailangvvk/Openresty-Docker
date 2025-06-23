@@ -1,9 +1,9 @@
 #!/bin/sh
 
-# 默认端口 8080，如果 NGINX_PORT 被指定则使用
-NGINX_PORT="${NGINX_PORT:-8080}"
+# 默认端口 80，如果环境变量有覆盖则用覆盖的
+NGINX_PORT="${NGINX_PORT:-80}"
 
-# 替换端口变量并生成配置
-envsubst '${NGINX_PORT}' < /nginx.template.conf > /opt/openresty/nginx/conf/nginx.conf
+# 替换端口变量，生成最终配置
+envsubst '${NGINX_PORT}' < /nginx.template.conf > /usr/local/openresty/nginx/conf/nginx.conf
 
 exec "$@"
