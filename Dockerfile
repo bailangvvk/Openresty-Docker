@@ -26,27 +26,47 @@ RUN ./configure \
     --with-openssl=/tmp/openssl-${OPENSSL_VERSION} \
     --with-luajit \
     --with-http_ssl_module \
+    --with-http_v2_module \
     --with-http_stub_status_module \
     --with-http_realip_module \
+    --with-http_geoip_module \
+    --with-http_gzip_static_module \
+    --with-http_auth_request_module \
+    --with-http_secure_link_module \
+    --with-http_degradation_module \
+    --with-http_slice_module \
+    --with-http_stub_status_module \
+    --with-http_sub_module \
+    --with-http_dav_module \
+    --with-http_flv_module \
+    --with-http_mp4_module \
+    --with-http_proxy_module \
+    --with-http_random_index_module \
+    --with-http_addition_module \
+    --with-http_xslt_module \
+    --with-http_image_filter_module \
+    --with-http_perl_module \
     --with-threads \
     --with-stream \
     --with-stream_ssl_module \
+    --with-stream_realip_module \
+    --with-stream_geoip_module \
+    --with-stream_ssl_preread_module \
     --with-pcre-jit \
     --with-cc-opt="-Os -fomit-frame-pointer" \
-    --with-ld-opt="-Wl,--as-needed" \
-    --without-http_browser_module
+    --with-ld-opt="-Wl,--as-needed"
 
 RUN make -j${MAKE_JOBS} && make install
 
 # ---------- Stage 2: Runtime image ----------
 FROM alpine:3.18
 
-RUN apk add --no-cache libgcc libstdc++ libcrypto3 libssl3 pcre zlib
+RUN apk add --no-cache libgcc libstdc++ libcrypto3 libssl3 pcre zlib geoip libxslt gd perl
 
 ENV PATH="/usr/local/openresty/nginx/sbin:/usr/local/openresty/bin:$PATH"
 
 COPY --from=builder /usr/local/openresty /usr/local/openresty
 
-EXPOSE 80
+EXPOSE 80 443
 
 CMD ["/usr/local/openresty/bin/openresty", "-g", "daemon off;"]
