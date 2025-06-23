@@ -45,6 +45,9 @@ RUN make -j$(nproc) && make install
 # =================== 最终镜像 ===================
 FROM alpine:3.18
 
+# 添加 envsubst 所需的 gettext
+RUN apk add --no-cache gettext
+
 ENV PATH="/opt/openresty/nginx/sbin:$PATH"
 ENV NGINX_PORT=8080
 
