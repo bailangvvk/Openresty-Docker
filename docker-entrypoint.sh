@@ -4,6 +4,6 @@
 NGINX_PORT="${NGINX_PORT:-80}"
 
 # 替换端口变量，生成最终配置
-envsubst '${NGINX_PORT}' < /nginx.template.conf > /usr/local/openresty/nginx/conf/nginx.conf
+envsubst '${NGINX_PORT}' < /nginx.vh.default.conf > /usr/local/openresty/nginx/conf/nginx.conf
 
 exec "$@"
