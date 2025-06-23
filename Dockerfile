@@ -1,29 +1,43 @@
+# ---------- Stage 1: Build OpenResty ----------
 FROM alpine:3.20 as builder
 
-RUN apk add --no-cache curl build-base perl tar pkgconf pcre-dev zlib-dev linux-headers
+ARG OPENRESTY_VERSION
+ARG OPENSSL_VERSION=1.1.1w
+ARG PCRE_VERSION=8.45
+ARG MAKE_JOBS=2
 
 WORKDIR /tmp
 
-# 动态抓取最新OpenResty版本号并设置环境变量，接着下载源码、编译
-RUN export RESTY_VERSION=$(curl -s https://openresty.org/en/download.html \
-    | grep -oP 'openresty-\K[0-9.]+' | head -n1) && \
-    echo "Latest OpenResty version: $RESTY_VERSION" && \
-    curl -sSL https://openresty.org/download/openresty-${RESTY_VERSION}.tar.gz | tar xz && \
-    cd openresty-${RESTY_VERSION} && \
-    ./configure --prefix=/usr/local/openresty \
-        --with-pcre-jit \
-        --with-http_ssl_module \
-        --with-http_stub_status_module \
-        --with-http_realip_module \
-        --with-threads \
-        --with-stream \
-        --with-stream_ssl_module \
-        --with-cc-opt="-Os -fomit-frame-pointer" \
-        --with-ld-opt="-Wl,--as-needed" \
-        --without-http_browser_module && \
-    make -j$(nproc) && make install
+RUN apk add --no-cache build-base curl perl tar \
+    libtool automake autoconf pkgconf \
+    pcre-dev zlib-dev linux-headers
 
-# 生产镜像，复制OpenResty
+# 下载源码包（用传入的 OPENRESTY_VERSION）
+RUN curl -sSL https://openresty.org/download/openresty-${OPENRESTY_VERSION}.tar.gz | tar xz && \
+    curl -sSL https://www.openssl.org/source/old/1.1.1/openssl-${OPENSSL_VERSION}.tar.gz | tar xz && \
+    curl -sSL https://downloads.sourceforge.net/project/pcre/pcre/${PCRE_VERSION}/pcre-${PCRE_VERSION}.tar.gz | tar xz
+
+WORKDIR /tmp/openresty-${OPENRESTY_VERSION}
+
+RUN ./configure \
+    --prefix=/usr/local/openresty \
+    --with-pcre=/tmp/pcre-${PCRE_VERSION} \
+    --with-openssl=/tmp/openssl-${OPENSSL_VERSION} \
+    --with-luajit \
+    --with-http_ssl_module \
+    --with-http_stub_status_module \
+    --with-http_realip_module \
+    --with-threads \
+    --with-stream \
+    --with-stream_ssl_module \
+    --with-pcre-jit \
+    --with-cc-opt="-Os -fomit-frame-pointer" \
+    --with-ld-opt="-Wl,--as-needed" \
+    --without-http_browser_module
+
+RUN make -j${MAKE_JOBS} && make install
+
+# ---------- Stage 2: Final image ----------
 FROM alpine:3.18
 
 RUN apk add --no-cache libgcc libstdc++ libcrypto3 libssl3 pcre zlib
