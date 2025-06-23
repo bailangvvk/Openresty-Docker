@@ -41,7 +41,7 @@ RUN make -j${MAKE_JOBS} && make install
 # ---------- Stage 2: Runtime image ----------
 FROM alpine:3.18
 
-RUN apk add --no-cache libgcc libstdc++ libcrypto3 libssl3 pcre zlib
+RUN apk add --no-cache libgcc libstdc++ libcrypto3 libssl3 pcre zlib gettext
 
 ENV PATH="/usr/local/openresty/nginx/sbin:/usr/local/openresty/bin:$PATH"
 
