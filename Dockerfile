@@ -40,7 +40,7 @@ RUN ./configure \
     --with-http_dav_module \
     --with-http_flv_module \
     --with-http_mp4_module \
-    --with-http_proxy_module \
+    # --with-http_proxy_module \
     --with-http_random_index_module \
     --with-http_addition_module \
     --with-http_xslt_module \
