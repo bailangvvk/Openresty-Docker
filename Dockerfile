@@ -1,7 +1,7 @@
 # ---------- Stage 1: Build OpenResty ----------
-FROM alpine:3.20 as builder
+FROM alpine:3.20 AS builder
 
-ARG RESTY_VERSION=1.27.1.2
+ARG RESTY_VERSION
 ARG RESTY_OPENSSL_VERSION=1.1.1w
 ARG RESTY_PCRE_VERSION=8.45
 ARG RESTY_J=2
@@ -38,7 +38,7 @@ RUN ./configure \
 
 RUN make -j${RESTY_J} && make install
 
-# ---------- Stage 2: Final image (scratch base + alpine rootfs) ----------
+# ---------- Stage 2: Final image ----------
 FROM alpine:3.18
 
 RUN apk add --no-cache libgcc libstdc++ libcrypto3 libssl3 pcre zlib
