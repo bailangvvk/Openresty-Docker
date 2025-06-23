@@ -8,7 +8,7 @@ on:
     - cron: '0 3 * * *' # 每天构建一次（可选）
 
 env:
-  DOCKER_REPO: bailangvvking/openresty-static
+  DOCKER_REPO: bailangvvking/openresty
 
 jobs:
   build:
