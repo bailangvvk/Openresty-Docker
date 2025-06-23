@@ -19,21 +19,22 @@ RUN curl -sSL https://openresty.org/download/openresty-${OPENRESTY_VERSION}.tar.
 
 WORKDIR /tmp/openresty-${OPENRESTY_VERSION}
 
-RUN ./configure \
-    --prefix=/usr/local/openresty \
-    --with-pcre=/tmp/pcre-${PCRE_VERSION} \
-    --with-openssl=/tmp/openssl-${OPENSSL_VERSION} \
-    --with-luajit \
-    --with-http_ssl_module \
-    --with-http_stub_status_module \
-    --with-http_realip_module \
-    --with-threads \
-    --with-stream \
-    --with-stream_ssl_module \
-    --with-pcre-jit \
-    --with-cc-opt="-Os -fomit-frame-pointer" \
-    --with-ld-opt="-Wl,--as-needed" \
-    --without-http_browser_module
+RUN ./configure
+# RUN ./configure \
+#     --prefix=/usr/local/openresty \
+#     --with-pcre=/tmp/pcre-${PCRE_VERSION} \
+#     --with-openssl=/tmp/openssl-${OPENSSL_VERSION} \
+#     --with-luajit \
+#     --with-http_ssl_module \
+#     --with-http_stub_status_module \
+#     --with-http_realip_module \
+#     --with-threads \
+#     --with-stream \
+#     --with-stream_ssl_module \
+#     --with-pcre-jit \
+#     --with-cc-opt="-Os -fomit-frame-pointer" \
+#     --with-ld-opt="-Wl,--as-needed" \
+#     --without-http_browser_module
 
 RUN make -j${MAKE_JOBS} && make install
 
