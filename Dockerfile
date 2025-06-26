@@ -1,11 +1,4 @@
-# syntax=docker/dockerfile:1
-
 FROM alpine:3.20 AS builder
-
-# 可选手动传参，否则自动抓最新版
-ARG OPENRESTY_VERSION
-ARG OPENSSL_VERSION
-ARG ZLIB_VERSION
 
 WORKDIR /build
 
@@ -21,7 +14,9 @@ RUN apk add --no-cache \
     grep \
     tar \
     bash \
-    jq && \
+    jq \
+    git \
+    && \
   OPENRESTY_VERSION=$(wget -q -O - https://openresty.org/en/download.html | grep -oE 'openresty-[0-9]+\.[0-9]+\.[0-9]+' | head -n1 | cut -d'-' -f2) \
   && \
   OPENSSL_VERSION=$(wget -q -O - https://www.openssl.org/source/ | grep -oE 'openssl-[0-9]+\.[0-9]+\.[0-9]+' | head -n1 | cut -d'-' -f2) \
@@ -48,8 +43,9 @@ RUN apk add --no-cache \
   \
   echo "==> Using versions: openresty-${OPENRESTY_VERSION}, openssl-${OPENSSL_VERSION}, zlib-${ZLIB_VERSION}" && \
   \
-  curl -fSL https://openresty.org/download/openresty-${OPENRESTY_VERSION}.tar.gz -o openresty.tar.gz && \
-  tar xzf openresty.tar.gz && \
+  # curl -fSL https://openresty.org/download/openresty-${OPENRESTY_VERSION}.tar.gz -o openresty.tar.gz && \
+  # tar xzf openresty.tar.gz && \
+  git clone --branch master --recursive https://github.com/openresty/openresty.git && \
   \
   curl -fSL https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz -o openssl.tar.gz && \
   tar xzf openssl.tar.gz && \
@@ -57,7 +53,7 @@ RUN apk add --no-cache \
   curl -fSL https://fossies.org/linux/misc/zlib-${ZLIB_VERSION}.tar.gz -o zlib.tar.gz && \
   tar xzf zlib.tar.gz && \
   \
-  cd openresty-${OPENRESTY_VERSION} && \
+  cd openresty && \
   ./configure \
     --prefix=/etc/openresty \
     --user=root \
