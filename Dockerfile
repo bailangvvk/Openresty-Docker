@@ -16,6 +16,12 @@ RUN apk add --no-cache \
     bash \
     jq \
     git \
+    autoconf \
+    automake \
+    libtool \
+    make \
+    gcc \
+    g++ \
     && \
   OPENRESTY_VERSION=$(wget -q -O - https://openresty.org/en/download.html | grep -oE 'openresty-[0-9]+\.[0-9]+\.[0-9]+' | head -n1 | cut -d'-' -f2) \
   && \
