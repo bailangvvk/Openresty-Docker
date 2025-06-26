@@ -49,9 +49,8 @@ RUN apk add --no-cache \
   \
   echo "==> Using versions: openresty-${OPENRESTY_VERSION}, openssl-${OPENSSL_VERSION}, zlib-${ZLIB_VERSION}" && \
   \
-  # curl -fSL https://openresty.org/download/openresty-${OPENRESTY_VERSION}.tar.gz -o openresty.tar.gz && \
-  # tar xzf openresty.tar.gz && \
-  git clone --branch master --recursive https://github.com/openresty/openresty.git && \
+  curl -fSL https://openresty.org/download/openresty-${OPENRESTY_VERSION}.tar.gz -o openresty.tar.gz && \
+  tar xzf openresty.tar.gz && \
   \
   curl -fSL https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz -o openssl.tar.gz && \
   tar xzf openssl.tar.gz && \
@@ -59,7 +58,7 @@ RUN apk add --no-cache \
   curl -fSL https://fossies.org/linux/misc/zlib-${ZLIB_VERSION}.tar.gz -o zlib.tar.gz && \
   tar xzf zlib.tar.gz && \
   \
-  cd openresty && \
+  cd openresty-${OPENRESTY_VERSION} && \
   ./configure \
     --prefix=/etc/openresty \
     --user=root \
