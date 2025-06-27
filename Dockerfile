@@ -22,6 +22,7 @@ RUN apk add --no-cache \
     make \
     gcc \
     g++ \
+    tree \
     && \
   OPENRESTY_VERSION=$(wget -q -O - https://openresty.org/en/download.html | grep -oE 'openresty-[0-9]+\.[0-9]+\.[0-9]+' | head -n1 | cut -d'-' -f2) \
   && \
@@ -45,7 +46,7 @@ RUN apk add --no-cache \
   OPENSSL_VERSION="${OPENSSL_VERSION:-3.3.0}" && \
   ZLIB_VERSION="${ZLIB_VERSION:-1.3.1}" && \
   ZSTD_VERSION="${ZSTD_VERSION:-1.5.7}" && \
-  CORERULESET_VERSION="${CORERULESET_VERSION}" && \
+  CORERULESET_VERSION="${CORERULESET_VERSION:-4.15.0}" && \
   \
   echo "==> Using versions: openresty-${OPENRESTY_VERSION}, openssl-${OPENSSL_VERSION}, zlib-${ZLIB_VERSION}" && \
   \
@@ -57,6 +58,8 @@ RUN apk add --no-cache \
   \
   curl -fSL https://fossies.org/linux/misc/zlib-${ZLIB_VERSION}.tar.gz -o zlib.tar.gz && \
   tar xzf zlib.tar.gz && \
+  \
+  tree && \
   \
   cd openresty-${OPENRESTY_VERSION} && \
   ./configure \
