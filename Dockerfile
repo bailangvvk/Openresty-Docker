@@ -64,8 +64,9 @@ RUN  set -x && apk add --no-cache \
   curl -fSL https://fossies.org/linux/misc/zlib-${ZLIB_VERSION}.tar.gz -o zlib.tar.gz && \
   tar xzf zlib.tar.gz && \
   \
-  tree && \
-  \
+  # tree && \
+  # \
+
   # cd openresty-${OPENRESTY_VERSION} && \
   # ./configure \
   #   --prefix=/etc/openresty \
@@ -87,7 +88,7 @@ RUN  set -x && apk add --no-cache \
   # make -j$(nproc) && \
   # make install \
 
-  RUN cd openresty-${OPENRESTY_VERSION} && \
+  cd openresty-${OPENRESTY_VERSION} && \
   ./configure \
     --prefix=/etc/openresty \
     --with-openssl=../openssl-${OPENSSL_VERSION} \
