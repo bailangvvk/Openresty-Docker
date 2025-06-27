@@ -64,8 +64,8 @@ RUN  set -x && apk add --no-cache \
   curl -fSL https://fossies.org/linux/misc/zlib-${ZLIB_VERSION}.tar.gz -o zlib.tar.gz && \
   tar xzf zlib.tar.gz && \
   \
-  # tree && \
-  # \
+  # tree \
+  && \
 
   # cd openresty-${OPENRESTY_VERSION} && \
   # ./configure \
@@ -97,6 +97,7 @@ RUN  set -x && apk add --no-cache \
   # --with-ld-opt="-Wl,--export-dynamic" && \
   --with-cc-opt="-static -static-libgcc" \
   --with-ld-opt="-static" \
+  && \
   make -j$(nproc) && \
   make install \
 
