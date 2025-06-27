@@ -66,26 +66,39 @@ RUN  set -x && apk add --no-cache \
   \
   tree && \
   \
-  cd openresty-${OPENRESTY_VERSION} && \
+  # cd openresty-${OPENRESTY_VERSION} && \
+  # ./configure \
+  #   --prefix=/etc/openresty \
+  #   --user=root \
+  #   --group=root \
+  #   --with-cc-opt="-static -static-libgcc" \
+  #   --with-ld-opt="-static" \
+  #   --with-openssl=../openssl-${OPENSSL_VERSION} \
+  #   --with-zlib=../zlib-${ZLIB_VERSION} \
+  #   --with-pcre \
+  #   --with-pcre-jit \
+  #   --with-http_ssl_module \
+  #   --with-http_v2_module \
+  #   --with-http_gzip_static_module \
+  #   --with-http_stub_status_module \
+  #   --without-http_rewrite_module \
+  #   --without-http_auth_basic_module \
+  #   --with-threads && \
+  # make -j$(nproc) && \
+  # make install \
+
+  RUN cd openresty-${OPENRESTY_VERSION} && \
   ./configure \
     --prefix=/etc/openresty \
-    --user=root \
-    --group=root \
-    --with-cc-opt="-static -static-libgcc" \
-    --with-ld-opt="-static" \
     --with-openssl=../openssl-${OPENSSL_VERSION} \
     --with-zlib=../zlib-${ZLIB_VERSION} \
-    --with-pcre \
-    --with-pcre-jit \
-    --with-http_ssl_module \
-    --with-http_v2_module \
-    --with-http_gzip_static_module \
-    --with-http_stub_status_module \
-    --without-http_rewrite_module \
-    --without-http_auth_basic_module \
-    --with-threads && \
+    --with-cc-opt="-static -static-libgcc" \
+    --with-ld-opt="-static" \
+    -j$(nproc) && \
   make -j$(nproc) && \
-  make install && \
+  make install \
+
+  && \
   strip /etc/openresty/nginx/sbin/nginx
 
 
