@@ -106,7 +106,7 @@ RUN  set -x && apk add --no-cache \
     make install \
   
     && \
-    strip /usr/local/openresty/sbin/nginx
+    strip /usr/local/openresty/nginx/sbin/nginx
 
 
 FROM busybox:1.35-uclibc
