@@ -65,7 +65,7 @@ RUN  set -x && apk add --no-cache \
   tar xzf zlib.tar.gz && \
   \
   # tree \
-  && \
+  # && \
 
   # cd openresty-${OPENRESTY_VERSION} && \
   # ./configure \
@@ -88,15 +88,18 @@ RUN  set -x && apk add --no-cache \
   # make -j$(nproc) && \
   # make install \
 
-  cd openresty-${OPENRESTY_VERSION} && \
   ./configure \
   --prefix=/usr/local/openresty \
-  --with-openssl=../openssl-${OPENSSL_VERSION} \
-  --with-zlib=../zlib-${ZLIB_VERSION} \
-  # --with-cc-opt="-O2" \
-  # --with-ld-opt="-Wl,--export-dynamic" && \
   --with-cc-opt="-static -static-libgcc" \
-  --with-ld-opt="-static" \
+  --with-ld-opt="-static -Wl,--export-dynamic" \
+  --with-openssl=../openssl-3.5.0 \
+  --with-zlib=../zlib-1.3.1 \
+  --with-pcre-jit \
+  --with-http_ssl_module \
+  --with-http_stub_status_module \
+  --with-http_v2_module \
+  --with-http_gzip_static_module \
+  --with-threads \
   && \
   make -j$(nproc) && \
   make install \
@@ -105,16 +108,15 @@ RUN  set -x && apk add --no-cache \
   strip /usr/local/openresty/sbin/nginx
 
 
-# 最小运行时镜像
 FROM busybox:1.35-uclibc
 
-# 拷贝构建产物
 COPY --from=builder /usr/local/openresty /usr/local/openresty
 
-# 暴露端口
-EXPOSE 80 443
+ENV PATH="/usr/local/openresty/nginx/sbin:$PATH"
+ENV LUA_PATH="/usr/local/openresty/lualib/?.lua;;"
+ENV LUA_CPATH="/usr/local/openresty/lualib/?.so;;"
 
 WORKDIR /usr/local/openresty
 
-# 启动 openresty
-CMD ["./nginx/sbin/nginx", "-g", "daemon off;"]
+CMD ["nginx", "-g", "daemon off;"]
+
