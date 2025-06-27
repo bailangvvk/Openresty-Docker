@@ -175,14 +175,20 @@ RUN  set -eux && apk add --no-cache \
 
 FROM busybox:1.35-uclibc
 
-COPY --from=builder /usr/local/openresty /usr/local/openresty
+# 修正复制路径，从 /usr/local 复制 OpenResty 相关文件
 COPY --from=builder /usr/local/nginx /usr/local/nginx
+COPY --from=builder /usr/local/luajit /usr/local/luajit
+COPY --from=builder /usr/local/lualib /usr/local/lualib
+COPY --from=builder /usr/local/bin/openresty /usr/local/bin/
+COPY --from=builder /usr/local/bin/luajit /usr/local/bin/
 
-ENV PATH="/usr/local/openresty/nginx/sbin:$PATH"
-ENV LUA_PATH="/usr/local/openresty/lualib/?.lua;;"
-ENV LUA_CPATH="/usr/local/openresty/lualib/?.so;;"
+ENV PATH="/usr/local/nginx/sbin:/usr/local/bin:$PATH"
+ENV LUA_PATH="/usr/local/lualib/?.lua;;"
+ENV LUA_CPATH="/usr/local/lualib/?.so;;"
 
-WORKDIR /usr/local/openresty
+WORKDIR /usr/local/nginx
+
+# 创建日志目录
+RUN mkdir -p /data/logs
 
 CMD ["nginx", "-g", "daemon off;"]
-
