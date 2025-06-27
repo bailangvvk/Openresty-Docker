@@ -3,7 +3,7 @@ FROM alpine:3.20 AS builder
 WORKDIR /build
 
 # 安装构建依赖
-RUN apk add --no-cache \
+RUN  set -x && apk add --no-cache \
     build-base \
     curl \
     pcre-dev \
