@@ -60,7 +60,7 @@ RUN  set -eux && apk add --no-cache \
     CORERULESET_VERSION="${CORERULESET_VERSION:-4.15.0}" && \
     PCRE_VERSION="${PCRE_VERSION:-8.45}" && \
     \
-    echo "==> Using versions: openresty-${OPENRESTY_VERSION}, openssl-${OPENSSL_VERSION}, zlib-${ZLIB_VERSION}" && \
+    echo "==> Using versions: openresty-${OPENRESTY_VERSION}, openssl-${OPENSSL_VERSION}, zlib-${ZLIB_VERSION}, ZSTD_VERSION-${ZSTD_VERSION}, CORERULESET_VERSION-${CORERULESET_VERSION}, CORERULESET_VERSION-${CORERULESET_VERSION}" && \
     \
     curl -fSL https://openresty.org/download/openresty-${OPENRESTY_VERSION}.tar.gz -o openresty.tar.gz && \
     # curl -fSL https://github.com/openresty/openresty/releases/download/v${OPENRESTY_VERSION}/openresty-${OPENRESTY_VERSION}.tar.gz  && \
@@ -73,7 +73,7 @@ RUN  set -eux && apk add --no-cache \
     tar xzf zlib.tar.gz && \
     \
     curl -fSL https://sourceforge.net/projects/pcre/files/pcre/${PCRE_VERSION}/pcre-${PCRE_VERSION}.tar.gz/download -o pcre.tar.gz && \
-    tar xzf pcre.tar.gz \
+    tar xzf pcre.tar.gz && \
     \
     # tree \
     # && \
