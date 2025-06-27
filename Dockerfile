@@ -24,7 +24,11 @@ RUN  set -x && apk add --no-cache \
     g++ \
     tree \
     && \
-  OPENRESTY_VERSION=$(wget --timeout 10 -q -O - https://openresty.org/en/download.html | grep -oE 'openresty-[0-9]+\.[0-9]+\.[0-9]+' | head -n1 | cut -d'-' -f2) \
+  # OPENRESTY_VERSION=$(wget --timeout 10 -q -O - https://openresty.org/en/download.html | grep -oE 'openresty-[0-9]+\.[0-9]+\.[0-9]+' | head -n1 | cut -d'-' -f2) \
+  OPENRESTY_VERSION=$(wget --timeout=10 -q -O - https://openresty.org/en/download.html \
+  | grep -ioE 'openresty [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' \
+  | head -n1 \
+  | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+') \
   && \
   OPENSSL_VERSION=$(wget -q -O - https://www.openssl.org/source/ | grep -oE 'openssl-[0-9]+\.[0-9]+\.[0-9]+' | head -n1 | cut -d'-' -f2) \
   && \
