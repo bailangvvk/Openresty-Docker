@@ -175,20 +175,31 @@ RUN  set -eux && apk add --no-cache \
 
 FROM busybox:1.35-uclibc
 
-# 修正复制路径，从 /usr/local 复制 OpenResty 相关文件
+# 复制OpenResty核心文件
 COPY --from=builder /usr/local/nginx /usr/local/nginx
 COPY --from=builder /usr/local/luajit /usr/local/luajit
 COPY --from=builder /usr/local/lualib /usr/local/lualib
 COPY --from=builder /usr/local/bin/openresty /usr/local/bin/
-COPY --from=builder /usr/local/bin/luajit /usr/local/bin/
+
+# 正确复制luajit可执行文件（从luajit安装目录复制）
+COPY --from=builder /usr/local/luajit/bin/luajit /usr/local/bin/
+
+# 确保必要的库路径被识别
+RUN mkdir -p /usr/local/lib \
+    && ln -sf /usr/local/luajit/lib/libluajit-5.1.so.2 /usr/local/lib/ \
+    && ln -sf /usr/local/luajit/lib/libluajit-5.1.so.2.1.ROLLING /usr/local/lib/
 
 ENV PATH="/usr/local/nginx/sbin:/usr/local/bin:$PATH"
 ENV LUA_PATH="/usr/local/lualib/?.lua;;"
 ENV LUA_CPATH="/usr/local/lualib/?.so;;"
+ENV LD_LIBRARY_PATH="/usr/local/luajit/lib:$LD_LIBRARY_PATH"
 
 WORKDIR /usr/local/nginx
 
-# 创建日志目录
-RUN mkdir -p /data/logs
+# 创建日志目录并设置权限
+RUN mkdir -p /data/logs \
+    && chown -R nobody:nobody /data/logs /usr/local/nginx
+
+USER nobody
 
 CMD ["nginx", "-g", "daemon off;"]
