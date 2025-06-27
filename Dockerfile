@@ -90,24 +90,23 @@ RUN  set -x && apk add --no-cache \
 
   cd openresty-${OPENRESTY_VERSION} && \
   ./configure \
-    --prefix=/etc/openresty \
-    --with-openssl=../openssl-${OPENSSL_VERSION} \
-    --with-zlib=../zlib-${ZLIB_VERSION} \
-    --with-cc-opt="-static -static-libgcc" \
-    --with-ld-opt="-static" \
-    -j$(nproc) && \
+  --prefix=/usr/local/openresty \
+  --with-openssl=../openssl-${OPENSSL_VERSION} \
+  --with-zlib=../zlib-${ZLIB_VERSION} \
+  --with-cc-opt="-O2" \
+  --with-ld-opt="-Wl,--export-dynamic" && \
   make -j$(nproc) && \
   make install \
 
   && \
-  strip /etc/openresty/nginx/sbin/nginx
+  strip /usr/local/openresty/sbin/nginx
 
 
 # 最小运行时镜像
 FROM busybox:1.35-uclibc
 
 # 拷贝构建产物
-COPY --from=builder /etc/openresty /etc/openresty
+COPY --from=builder /usr/local/openresty /usr/local/openresty
 
 # 暴露端口
 EXPOSE 80 443
