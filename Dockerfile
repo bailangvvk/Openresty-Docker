@@ -71,8 +71,8 @@ RUN set -eux && apk add --no-cache \
     --with-http_ssl_module \
     --with-debug && \
     make -j$(nproc) && \
-    make install && \
-    strip /usr/local/nginx/sbin/nginx
+    make install
+    # && strip /usr/local/nginx/sbin/nginx
     
 
 FROM busybox:1.35-uclibc
