@@ -201,7 +201,12 @@ RUN  set -eux && apk add --no-cache \
     make -j$(nproc) && \
     make install \
     && \
-    strip /usr/local/nginx/sbin/nginx
+    # strip /usr/local/nginx/sbin/nginx
+    strip /usr/local/nginx/sbin/nginx && \
+    strip /usr/local/luajit/bin/luajit || true && \
+    strip /usr/local/luajit/lib/libluajit-5.1.so.2 || true && \
+    find /usr/local/nginx/modules -name '*.so' -exec strip {} \; || true && \
+    find /usr/local/lualib -name '*.so' -exec strip {} \; || true
 
 FROM alpine:latest
 
