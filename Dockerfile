@@ -100,73 +100,102 @@ RUN  set -eux && apk add --no-cache \
     # make -j$(nproc) && \
     # make install \
   
+    # cd openresty-${OPENRESTY_VERSION} && \
+    # ./configure \
+    # --prefix=/usr/local \
+    # --modules-path=/usr/local/nginx/modules \
+    # --sbin-path=/usr/local/nginx/sbin/nginx \
+    # --conf-path=/usr/local/nginx/conf/nginx.conf \
+    # --error-log-path=/data/logs/error.log \
+    # --http-log-path=/data/logs/access.log \
+    # --with-cc-opt="-static -O2 -DNGX_LUA_ABORT_AT_PANIC -static-libgcc" \
+    # --with-ld-opt="-static -Wl,--export-dynamic" \
+    # --with-openssl=../openssl-${OPENSSL_VERSION} \
+    # --with-zlib=../zlib-${ZLIB_VERSION} \
+    # --with-pcre=../pcre-${PCRE_VERSION} \
+    # --with-pcre-jit \
+    # --with-stream \
+    # --user=nobody \
+    # --group=nobody \
+    # --with-stream_ssl_module \
+    # --with-stream_ssl_preread_module \
+    # --with-http_v2_module \
+    # --without-mail_pop3_module \
+    # --without-mail_imap_module \
+    # --without-mail_smtp_module \
+    # --with-http_stub_status_module  \
+    # --with-http_realip_module \
+    # --with-http_gzip_static_module \
+    # --with-http_sub_module \
+    # --with-http_gunzip_module \
+    # --with-threads \
+    # --with-compat \
+    # --with-stream=dynamic \
+    # --with-http_ssl_module \
+    # --with-debug \
+    # --with-lua_resty_core \
+    # # --without-lua_resty_dns \
+    # # --without-lua_resty_memcached \
+    # # --without-lua_redis_parser \
+    # # --without-lua_rds_parser \
+    # # --without-lua_resty_redis \
+    # # --without-lua_resty_mysql \
+    # # --without-lua_resty_upload \
+    # # --without-lua_resty_upstream_healthcheck \
+    # # --without-lua_resty_string \
+    # # --without-lua_resty_websocket \
+    # # --without-lua_resty_limit_traffic \
+    # # --without-lua_resty_lrucache \
+    # # --without-lua_resty_lock \
+    # # --without-lua_resty_signal \
+    # # --without-lua_resty_lrucache \
+    # # --without-lua_resty_shell \
+    # # --without-lua_resty_core \
+    # # --without-select_module \
+    # # --without-lua_resty_mysql \
+    # # --without-http_charset_module \
+    # # --without-http_ssi_module \
+    # # --without-http_userid_module \
+    # # --without-http_auth_basic_module \
+    # # --without-http_mirror_module \
+    # # --without-http_autoindex_module \
+    # # --without-http_split_clients_module \
+    # # --without-http_memcached_module \
+    # # --without-http_empty_gif_module \
+    # # --without-http_browser_module \
+    # # --without-stream_limit_conn_module \
+    # # --without-stream_geo_module \
+    # # --without-stream_map_module \
+    # # --without-stream_split_clients_module \
+    # # --without-stream_return_module \
+
     cd openresty-${OPENRESTY_VERSION} && \
     ./configure \
-    --prefix=/usr/local \
-    --modules-path=/usr/local/nginx/modules \
-    --sbin-path=/usr/local/nginx/sbin/nginx \
-    --conf-path=/usr/local/nginx/conf/nginx.conf \
-    --error-log-path=/data/logs/error.log \
-    --http-log-path=/data/logs/access.log \
-    --with-cc-opt="-static -O2 -DNGX_LUA_ABORT_AT_PANIC -static-libgcc" \
-    --with-ld-opt="-static -Wl,--export-dynamic" \
-    --with-openssl=../openssl-${OPENSSL_VERSION} \
-    --with-zlib=../zlib-${ZLIB_VERSION} \
-    --with-pcre=../pcre-${PCRE_VERSION} \
-    --with-pcre-jit \
-    --with-stream \
-    --user=nobody \
-    --group=nobody \
-    --with-stream_ssl_module \
-    --with-stream_ssl_preread_module \
-    --with-http_v2_module \
-    --without-mail_pop3_module \
-    --without-mail_imap_module \
-    --without-mail_smtp_module \
-    --with-http_stub_status_module  \
-    --with-http_realip_module \
-    --with-http_gzip_static_module \
-    --with-http_sub_module \
-    --with-http_gunzip_module \
-    --with-threads \
-    --with-compat \
-    --with-stream=dynamic \
-    --with-http_ssl_module \
-    --with-debug \
-    --without-lua_resty_dns \
-    --without-lua_resty_memcached \
-    --without-lua_redis_parser \
-    --without-lua_rds_parser \
-    --without-lua_resty_redis \
-    --without-lua_resty_mysql \
-    --without-lua_resty_upload \
-    --without-lua_resty_upstream_healthcheck \
-    --without-lua_resty_string \
-    --without-lua_resty_websocket \
-    --without-lua_resty_limit_traffic \
-    --without-lua_resty_lrucache \
-    --without-lua_resty_lock \
-    --without-lua_resty_signal \
-    --without-lua_resty_lrucache \
-    --without-lua_resty_shell \
-    --without-lua_resty_core \
-    --without-select_module \
-    --without-lua_resty_mysql \
-    --without-http_charset_module \
-    --without-http_ssi_module \
-    --without-http_userid_module \
-    --without-http_auth_basic_module \
-    --without-http_mirror_module \
-    --without-http_autoindex_module \
-    --without-http_split_clients_module \
-    --without-http_memcached_module \
-    --without-http_empty_gif_module \
-    --without-http_browser_module \
-    --without-stream_limit_conn_module \
-    --without-stream_geo_module \
-    --without-stream_map_module \
-    --without-stream_split_clients_module \
-    --without-stream_return_module \
+    # --prefix=/usr/local/openresty \
+    # --with-luajit \
+    # --with-pcre-jit \
+    # --with-ipv6 \
+    # --with-http_ssl_module \
+    # --with-http_realip_module \
+    # --with-http_addition_module \
+    # --with-http_sub_module \
+    # --with-http_dav_module \
+    # --with-http_flv_module \
+    # --with-http_mp4_module \
+    # --with-http_gunzip_module \
+    # --with-http_gzip_static_module \
+    # --with-http_auth_request_module \
+    # --with-http_random_index_module \
+    # --with-http_secure_link_module \
+    # --with-http_stub_status_module \
+    # --with-http_v2_module \
+    # --with-stream \
+    # --with-stream_ssl_module \
+    # --with-stream_ssl_preread_module \
+    # --with-stream_realip_module \
+    # --with-threads \
+    # --with-file-aio
+    
     && \
     make -j$(nproc) && \
     make install \
