@@ -108,8 +108,10 @@ RUN  set -eux && apk add --no-cache \
     --conf-path=/usr/local/nginx/conf/nginx.conf \
     --error-log-path=/data/logs/error.log \
     --http-log-path=/data/logs/access.log \
-    --with-cc-opt="-static -O3 -DNGX_LUA_ABORT_AT_PANIC -static-libgcc" \
-    --with-ld-opt="-static -Wl,--export-dynamic" \
+    # --with-cc-opt="-static -O3 -DNGX_LUA_ABORT_AT_PANIC -static-libgcc" \
+    # --with-ld-opt="-static -Wl,--export-dynamic" \
+    --with-cc-opt="-O3 -DNGX_LUA_ABORT_AT_PANIC" \
+    --with-ld-opt="-Wl,--export-dynamic" \
     --with-openssl=../openssl-${OPENSSL_VERSION} \
     --with-zlib=../zlib-${ZLIB_VERSION} \
     --with-pcre=../pcre-${PCRE_VERSION} \
