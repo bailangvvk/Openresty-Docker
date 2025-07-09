@@ -199,10 +199,9 @@ RUN  set -eux && apk add --no-cache \
     
     && \
     make -j$(nproc) && \
-    make install
-  
-    # && \
-    # strip /usr/local/nginx/sbin/nginx
+    make install \
+    && \
+    strip /usr/local/nginx/sbin/nginx
 
 FROM alpine:latest
 
