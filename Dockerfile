@@ -198,14 +198,13 @@ RUN  set -eux && apk add --no-cache \
     
     && \
     make -j$(nproc) && \
-    make install \
+    make install
   
-    && \
-    strip /usr/local/nginx/sbin/nginx
+    # && \
+    # strip /usr/local/nginx/sbin/nginx
 
 # FROM busybox:1.35-uclibc
 FROM alpine:latest
-
 
 # 复制OpenResty核心文件
 COPY --from=builder /usr/local/nginx /usr/local/nginx
