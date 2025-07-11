@@ -134,7 +134,10 @@ RUN  set -eux && apk add --no-cache \
     --with-compat \
     --with-stream=dynamic \
     --with-http_ssl_module \
-    --with-debug \
+    # --with-debug \
+    --with-lua_resty_core \
+    --with-lua_resty_lrucache \
+    --with-lua_resty_lock \
     # --without-lua_resty_dns \
     # --without-lua_resty_memcached \
     # --without-lua_redis_parser \
