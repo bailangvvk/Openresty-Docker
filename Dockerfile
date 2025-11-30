@@ -99,8 +99,7 @@ RUN  set -eux && apk add --no-cache --virtual .build-deps \
       --without-mail_pop3_module \
       --without-mail_imap_module \
       --without-mail_smtp_module \
-      --with-stream=no \
-      --with-stream_ssl_module=no \
+      --without-stream_module \
     && \
     make -j$(nproc) && \
     make install
