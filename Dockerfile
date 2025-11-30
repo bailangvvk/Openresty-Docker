@@ -68,8 +68,8 @@ RUN  set -eux && apk add --no-cache --virtual .build-deps \
     cd openresty-${OPENRESTY_VERSION} && \
     ./configure \
       --prefix=/opt/openresty \
-      --user=nobody \
-      --group=nobody \
+      --user=appuser \
+      --group=appuser \
       --with-cc-opt="-static -static-libgcc -O2" \
       --with-ld-opt="-static" \
       --with-openssl=../openssl-${OPENSSL_VERSION} \
@@ -107,10 +107,10 @@ RUN  set -eux && apk add --no-cache --virtual .build-deps \
 
 # 中间层，用于创建用户和目录结构
 FROM alpine:latest AS intermediate
-RUN addgroup -g 101 -S nobody && \
-    adduser -u 101 -S -G nobody -h /dev/null nobody && \
+RUN addgroup -S appuser && \
+    adduser -S -G appuser appuser && \
     mkdir -p /opt/openresty/nginx/logs && \
-    chown -R nobody:nobody /opt/openresty/nginx/logs && \
+    chown -R appuser:appuser /opt/openresty/nginx/logs && \
     mkdir -p /etc/openresty && \
     # 创建一个默认的 nginx.conf 以防万一
     echo "worker_processes 1;\nevents { worker_connections 1024; }\nhttp { server { listen 80; location / { return 200 'Hello'; } } }" > /etc/openresty/nginx.conf
@@ -139,7 +139,7 @@ ENV LUA_CPATH="/opt/openresty/lualib/?.so;;"
 EXPOSE 80
 
 # 定义默认用户
-USER nobody
+USER appuser
 
 # 启动命令
 CMD ["/opt/openresty/bin/nginx", "-c", "/etc/openresty/nginx.conf", "-g", "daemon off;"]
