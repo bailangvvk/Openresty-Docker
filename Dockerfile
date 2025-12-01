@@ -75,14 +75,12 @@ RUN cd openresty-${OPENRESTY_VERSION} && \
       --without-mail_pop3_module \
       --without-mail_imap_module \
       --without-mail_smtp_module \
-    #   --without-stream_module \
     && \
     make -j$(nproc) && \
     make install
 
-# 剥离二进制文件和库以减小体积
-RUN strip /usr/local/openresty/nginx/sbin/nginx && \
-    strip /usr/local/openresty/luajit/bin/luajit-*.*/luajit || true && \
+# 剥离库文件以减小体积，但保留 nginx 主程序的符号以支持 FFI
+RUN strip /usr/local/openresty/luajit/bin/luajit-*.*/luajit || true && \
     find /usr/local/openresty/ -name "*.so" -exec strip {} \; || true
 
 # 清理构建目录
@@ -102,9 +100,12 @@ RUN addgroup -S -g 1001 appuser && \
 COPY --from=builder /usr/local/openresty /usr/local/openresty
 
 # 创建运行时目录并设置权限
+# 然后将日志文件符号链接到标准输出/错误，以便 docker logs 可以捕获它们
 RUN mkdir -p /usr/local/openresty/nginx/temp && \
     chown -R appuser:appuser /usr/local/openresty/nginx/temp && \
-    chown -R appuser:appuser /usr/local/openresty/nginx/logs
+    chown -R appuser:appuser /usr/local/openresty/nginx/logs && \
+    ln -sf /dev/stdout /usr/local/openresty/nginx/logs/access.log && \
+    ln -sf /dev/stderr /usr/local/openresty/nginx/logs/error.log
 
 # 设置环境变量
 ENV PATH="/usr/local/openresty/bin:/usr/local/openresty/nginx/sbin:$PATH"
