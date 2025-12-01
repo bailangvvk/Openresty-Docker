@@ -82,8 +82,8 @@ RUN  set -eux && apk add --no-cache --virtual .build-deps \
     --modules-path=/usr/local/nginx/modules \
     --sbin-path=/usr/local/nginx/sbin/nginx \
     --conf-path=/usr/local/nginx/conf/nginx.conf \
-    --error-log-path=/data/logs/error.log \
-    --http-log-path=/data/logs/access.log \
+    --error-log-path=/usr/local/nginx/logs/error.log \
+    --http-log-path=/usr/local/nginx/logs/access.log \
     --with-cc-opt="-O3 -DNGX_LUA_ABORT_AT_PANIC" \
     --with-ld-opt="-Wl,--export-dynamic" \
     --with-openssl=../openssl-${OPENSSL_VERSION} \
@@ -142,7 +142,10 @@ ENV LD_LIBRARY_PATH="/usr/local/luajit/lib:$LD_LIBRARY_PATH"
 
 WORKDIR /usr/local/nginx
 
-RUN mkdir -p /data/logs && chown -R nobody:nobody /data/logs /usr/local/nginx
+# Forward request and error logs to docker log collector
+RUN ln -sf /dev/stdout /usr/local/nginx/logs/access.log \
+    && ln -sf /dev/stderr /usr/local/nginx/logs/error.log \
+    && chown -R nobody:nobody /usr/local/nginx
 
 USER nobody
 
