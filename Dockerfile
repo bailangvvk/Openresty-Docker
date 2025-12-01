@@ -1,7 +1,7 @@
 # FROM alpine:3.20 AS builder
 FROM alpine:latest AS builder
 
-WORKDIR /build
+WORKDIR /tmp
 
 # 安装构建依赖
 RUN  set -eux && apk add --no-cache --virtual .build-deps \
@@ -39,11 +39,7 @@ RUN  set -eux && apk add --no-cache --virtual .build-deps \
     && \
     CORERULESET_VERSION=$(curl -s https://api.github.com/repos/coreruleset/coreruleset/releases/latest | grep -oE '"tag_name": "[^"]+' | cut -d'"' -f4 | sed 's/v//') \
     && \
-    PCRE_VERSION=$(curl -sL https://sourceforge.net/projects/pcre/files/pcre/ \
-    | grep -oE 'pcre/[0-9]+\.[0-9]+/' \
-    | grep -oE '[0-9]+\.[0-9]+' \
-    | sort -Vr \
-    | head -n1) \
+    PCRE2_VERSION=$(curl -sL https://github.com/PCRE2Project/pcre2/releases/ | grep -ioE 'pcre2-[0-9]+\.[0-9]+' | grep -v RC | cut -d'-' -f2 | sort -Vr | head -n1) \
     && \
     echo "=============版本号=============" && \
     echo "OPENRESTY_VERSION=${OPENRESTY_VERSION}" && \
@@ -51,7 +47,8 @@ RUN  set -eux && apk add --no-cache --virtual .build-deps \
     echo "ZLIB_VERSION=${ZLIB_VERSION}" && \
     echo "ZSTD_VERSION=${ZSTD_VERSION}" && \
     echo "CORERULESET_VERSION=${CORERULESET_VERSION}" && \
-    echo "PCRE_VERSION=${CORERULESET_VERSION}" && \
+    echo "PCRE_VERSION=${PCRE_VERSION}" && \
+    echo "PCRE2_VERSION=${PCRE2_VERSION}" && \
     \
     # fallback 以防 curl/grep 失败
     OPENRESTY_VERSION="${OPENRESTY_VERSION:-1.21.4.1}" && \
@@ -60,8 +57,7 @@ RUN  set -eux && apk add --no-cache --virtual .build-deps \
     ZSTD_VERSION="${ZSTD_VERSION:-1.5.7}" && \
     CORERULESET_VERSION="${CORERULESET_VERSION:-4.15.0}" && \
     PCRE_VERSION="${PCRE_VERSION:-8.45}" && \
-    \
-    echo "==> Using versions: openresty-${OPENRESTY_VERSION}, openssl-${OPENSSL_VERSION}, zlib-${ZLIB_VERSION}, ZSTD_VERSION-${ZSTD_VERSION}, CORERULESET_VERSION-${CORERULESET_VERSION}, CORERULESET_VERSION-${CORERULESET_VERSION}" && \
+    PCRE2_VERSION="${PCRE2_VERSION:-10.47}" && \
     \
     curl -fSL https://openresty.org/download/openresty-${OPENRESTY_VERSION}.tar.gz -o openresty.tar.gz && \
     # curl -fSL https://github.com/openresty/openresty/releases/download/v${OPENRESTY_VERSION}/openresty-${OPENRESTY_VERSION}.tar.gz  && \
@@ -73,8 +69,11 @@ RUN  set -eux && apk add --no-cache --virtual .build-deps \
     curl -fSL https://fossies.org/linux/misc/zlib-${ZLIB_VERSION}.tar.gz -o zlib.tar.gz && \
     tar xzf zlib.tar.gz && \
     \
-    curl -fSL https://sourceforge.net/projects/pcre/files/pcre/${PCRE_VERSION}/pcre-${PCRE_VERSION}.tar.gz/download -o pcre.tar.gz && \
-    tar xzf pcre.tar.gz && \
+    # curl -fSL https://sourceforge.net/projects/pcre/files/pcre/${PCRE_VERSION}/pcre-${PCRE_VERSION}.tar.gz/download -o pcre.tar.gz && \
+    # tar xzf pcre.tar.gz && \
+    # \
+    curl -fSL https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${PCRE2_VERSION}/pcre2-${PCRE2_VERSION}.tar.gz -o pcre2.tar.gz && \
+    tar xzf pcre2.tar.gz && \
     \
     cd openresty-${OPENRESTY_VERSION} && \
     ./configure \
@@ -88,7 +87,8 @@ RUN  set -eux && apk add --no-cache --virtual .build-deps \
     --with-ld-opt="-Wl,--export-dynamic" \
     --with-openssl=../openssl-${OPENSSL_VERSION} \
     --with-zlib=../zlib-${ZLIB_VERSION} \
-    --with-pcre=../pcre-${PCRE_VERSION} \
+    # --with-pcre=../pcre-${PCRE_VERSION} \
+    --with-pcre=../pcre2-${PCRE2_VERSION} \
     --with-pcre-jit \
     --with-stream \
     --user=nobody \
@@ -116,8 +116,9 @@ RUN  set -eux && apk add --no-cache --virtual .build-deps \
     strip /usr/local/luajit/bin/luajit || true && \
     strip /usr/local/luajit/lib/libluajit-5.1.so.2 || true && \
             find /usr/local/nginx/modules -name '*.so' -exec strip {} \; || true && \
-            find /usr/local/lualib -name '*.so' -exec strip {} \; || true && \
-            apk del .build-deps
+            find /usr/local/lualib -name '*.so' -exec strip {} \; || true \
+    && apk del --purge .build-deps \
+    && rm -rf /var/cache/apk/*
 
 FROM alpine:latest
 
