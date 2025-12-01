@@ -122,7 +122,11 @@ RUN  set -eux && apk add --no-cache --virtual .build-deps \
     && apk del --purge .build-deps \
     && rm -rf /var/cache/apk/*
 
-FROM alpine:latest
+# FROM alpine:latest
+# 这是一个更现代的、同样轻量级的 C 库，以简洁、高效、标准兼容和安全著称。和 Alpine Linux 使用的完全相同的C 库。
+FROM busybox:musl
+
+# RUN apk add --no-cache libgcc
 
 # 复制之前编译好的 openresty, luajit 等文件
 COPY --from=builder /usr/local/nginx /usr/local/nginx
