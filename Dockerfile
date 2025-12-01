@@ -1,6 +1,6 @@
 # ==============================================================================
 # Stage 1: Builder
-# 在此阶段，我们编译一个完全静态的 OpenResty 二进制文件。
+# 在此阶段，我们编译、剥离并准备一个优化的 OpenResty。
 # ==============================================================================
 FROM alpine:latest AS builder
 
@@ -12,15 +12,15 @@ ARG ZLIB_VERSION=1.3.1
 
 WORKDIR /build
 
-# 安装构建所需的最少依赖
+# 安装构建所需的最少依赖，包括 binutils (为了 strip)
 RUN apk add --no-cache --virtual .build-deps \
     build-base \
     curl \
     perl \
-    linux-headers
+    linux-headers \
+    binutils
 
 # 下载并解压所有源码
-# 将所有下载和解压操作合并到一层以减小镜像大小
 RUN set -eux; \
     curl -fSL https://openresty.org/download/openresty-${OPENRESTY_VERSION}.tar.gz -o openresty.tar.gz && \
     curl -fSL https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz -o openssl.tar.gz && \
@@ -35,6 +35,11 @@ RUN set -eux; \
 RUN cd openresty-${OPENRESTY_VERSION} && \
     ./configure \
       --prefix=/usr/local/openresty \
+      --sbin-path=/usr/local/openresty/nginx/sbin/nginx \
+      --modules-path=/usr/local/openresty/nginx/modules \
+      --conf-path=/usr/local/openresty/nginx/conf/nginx.conf \
+      --error-log-path=/usr/local/openresty/nginx/logs/error.log \
+      --http-log-path=/usr/local/openresty/nginx/logs/access.log \
       --user=appuser \
       --group=appuser \
       \
@@ -75,39 +80,31 @@ RUN cd openresty-${OPENRESTY_VERSION} && \
     make -j$(nproc) && \
     make install
 
-# ==============================================================================
-# Stage 2: Runtime Setup
-# 为 scratch 镜像准备用户、组和目录结构。
-# ==============================================================================
-FROM alpine:latest AS runtime-setup
+# 剥离二进制文件和库以减小体积
+RUN strip /usr/local/openresty/nginx/sbin/nginx && \
+    strip /usr/local/openresty/luajit/bin/luajit-*.*/luajit || true && \
+    find /usr/local/openresty/ -name "*.so" -exec strip {} \; || true
 
+# 清理构建目录
+RUN rm -rf /build/*
+
+# ==============================================================================
+# Stage 2: Final Image
+# 构建最终的、基于 Alpine 的最小化镜像。
+# ==============================================================================
+FROM alpine:latest
+
+# 创建用户和组
 RUN addgroup -S -g 1001 appuser && \
     adduser -S -u 1001 -G appuser appuser
 
-# 创建 OpenResty 运行时需要的目录，并设置正确的所有权
-RUN mkdir -p /usr/local/openresty/nginx/logs /usr/local/openresty/nginx/temp && \
-    chown -R appuser:appuser /usr/local/openresty
+# 从 builder 阶段复制所有编译好的 OpenResty 文件
+COPY --from=builder /usr/local/openresty /usr/local/openresty
 
-# ==============================================================================
-# Stage 3: Final Image
-# 构建最终的、最小化的镜像。
-# ==============================================================================
-FROM scratch
-
-# 从 runtime-setup 阶段复制用户和组信息
-COPY --from=runtime-setup /etc/passwd /etc/passwd
-COPY --from=runtime-setup /etc/group /etc/group
-
-# 从 builder 阶段复制编译好的 OpenResty 文件
-COPY --from=builder /usr/local/openresty/bin/openresty /usr/local/openresty/bin/openresty
-COPY --from=builder /usr/local/openresty/nginx/sbin/nginx /usr/local/openresty/nginx/sbin/nginx
-COPY --from=builder /usr/local/openresty/lualib /usr/local/openresty/lualib
-COPY --from=builder /usr/local/openresty/luajit /usr/local/openresty/luajit
-COPY --from=builder /usr/local/openresty/nginx/conf /usr/local/openresty/nginx/conf
-
-# 从 runtime-setup 阶段复制目录结构和权限
-COPY --from=runtime-setup --chown=appuser:appuser /usr/local/openresty/nginx/logs /usr/local/openresty/nginx/logs
-COPY --from=runtime-setup --chown=appuser:appuser /usr/local/openresty/nginx/temp /usr/local/openresty/nginx/temp
+# 创建运行时目录并设置权限
+RUN mkdir -p /usr/local/openresty/nginx/temp && \
+    chown -R appuser:appuser /usr/local/openresty/nginx/temp && \
+    chown -R appuser:appuser /usr/local/openresty/nginx/logs
 
 # 设置环境变量
 ENV PATH="/usr/local/openresty/bin:/usr/local/openresty/nginx/sbin:$PATH"
