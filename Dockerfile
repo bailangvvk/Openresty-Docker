@@ -23,13 +23,9 @@ RUN  set -eux && apk add --no-cache --virtual .build-deps \
     make \
     gcc \
     g++ \
-    tree \
+    # tree \
     && \
-    # OPENRESTY_VERSION=$(wget --timeout 10 -q -O - https://openresty.org/en/download.html | grep -oE 'openresty-[0-9]+\.[0-9]+\.[0-9]+' | head -n1 | cut -d'-' -f2) \
-    OPENRESTY_VERSION=$(wget --timeout=10 -q -O - https://openresty.org/en/download.html \
-    | grep -ioE 'openresty [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' \
-    | head -n1 \
-    | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+') \
+    OPENRESTY_VERSION=$(wget -q -O - https://openresty.org/en/download.html | grep -oEi 'openresty [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | head -n1 | awk '{print $2}') \
     && \
     OPENSSL_VERSION=$(wget -q -O - https://www.openssl.org/source/ | grep -oE 'openssl-[0-9]+\.[0-9]+\.[0-9]+' | head -n1 | cut -d'-' -f2) \
     && \
@@ -43,6 +39,8 @@ RUN  set -eux && apk add --no-cache --virtual .build-deps \
     && \
     PCRE2_VERSION=$(curl -sL https://github.com/PCRE2Project/pcre2/releases/ | grep -ioE 'pcre2-[0-9]+\.[0-9]+' | grep -v RC | cut -d'-' -f2 | sort -Vr | head -n1) \
     && \
+    BROTLI_VERSION=$(curl -sL https://github.com/google/brotli/releases/ | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -n1 | cut -c2-) \
+    && \
     echo "=============版本号=============" && \
     echo "OPENRESTY_VERSION=${OPENRESTY_VERSION}" && \
     echo "OPENSSL_VERSION=${OPENSSL_VERSION}" && \
@@ -51,6 +49,7 @@ RUN  set -eux && apk add --no-cache --virtual .build-deps \
     echo "CORERULESET_VERSION=${CORERULESET_VERSION}" && \
     echo "PCRE_VERSION=${PCRE_VERSION}" && \
     echo "PCRE2_VERSION=${PCRE2_VERSION}" && \
+    echo "BROTLI_VERSION=${BROTLI_VERSION}" && \
     \
     # fallback 以防 curl/grep 失败
     OPENRESTY_VERSION="${OPENRESTY_VERSION:-1.21.4.1}" && \
@@ -60,6 +59,7 @@ RUN  set -eux && apk add --no-cache --virtual .build-deps \
     CORERULESET_VERSION="${CORERULESET_VERSION:-4.15.0}" && \
     PCRE_VERSION="${PCRE_VERSION:-8.45}" && \
     PCRE2_VERSION="${PCRE2_VERSION:-10.47}" && \
+    BROTLI_VERSION="${BROTLI_VERSION:-1.2.0}" && \
     \
     curl -fSL https://openresty.org/download/openresty-${OPENRESTY_VERSION}.tar.gz -o openresty.tar.gz && \
     # curl -fSL https://github.com/openresty/openresty/releases/download/v${OPENRESTY_VERSION}/openresty-${OPENRESTY_VERSION}.tar.gz  && \
@@ -134,7 +134,7 @@ RUN  set -eux && apk add --no-cache --virtual .build-deps \
 #         libc.musl-x86_64.so.1 => /lib/ld-musl-x86_64.so.1 (0x7f6c5d80a000)
 FROM alpine:latest
 
-RUN apk add --no-cache libgcc
+# RUN apk add --no-cache libgcc
 
 # 复制之前编译好的 openresty, luajit 等文件
 COPY --from=builder /usr/local/nginx /usr/local/nginx
