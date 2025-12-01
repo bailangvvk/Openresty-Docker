@@ -79,12 +79,12 @@ RUN  set -eux && apk add --no-cache --virtual .build-deps \
     \
     cd openresty-${OPENRESTY_VERSION} && \
     ./configure \
-    --prefix=/usr/local \
-    --modules-path=/usr/local/nginx/modules \
-    --sbin-path=/usr/local/nginx/sbin/nginx \
-    --conf-path=/usr/local/nginx/conf/nginx.conf \
-    --error-log-path=/usr/local/nginx/logs/error.log \
-    --http-log-path=/usr/local/nginx/logs/access.log \
+    --prefix=/usr/local/openresty \
+    --modules-path=/usr/local/openresty/nginx/modules \
+    --sbin-path=/usr/local/openresty/nginx/sbin/nginx \
+    --conf-path=/usr/local/openresty/nginx/conf/nginx.conf \
+    --error-log-path=/usr/local/openresty/nginx/logs/error.log \
+    --http-log-path=/usr/local/openresty/nginx/logs/access.log \
     --with-cc-opt="-O3 -DNGX_LUA_ABORT_AT_PANIC" \
     --with-ld-opt="-Wl,--export-dynamic" \
     --with-openssl=../openssl-${OPENSSL_VERSION} \
@@ -114,11 +114,11 @@ RUN  set -eux && apk add --no-cache --virtual .build-deps \
     make -j$(nproc) && \
     make install \
     && \
-    strip /usr/local/nginx/sbin/nginx && \
-    strip /usr/local/luajit/bin/luajit || true && \
-    strip /usr/local/luajit/lib/libluajit-5.1.so.2 || true && \
-            find /usr/local/nginx/modules -name '*.so' -exec strip {} \; || true && \
-            find /usr/local/lualib -name '*.so' -exec strip {} \; || true \
+    strip /usr/local/openresty/nginx/sbin/nginx && \
+    strip /usr/local/openresty/luajit/bin/luajit || true && \
+    strip /usr/local/openresty/luajit/lib/libluajit-5.1.so.2 || true && \
+            find /usr/local/openresty/nginx/modules -name '*.so' -exec strip {} \; || true && \
+            find /usr/local/openresty/lualib -name '*.so' -exec strip {} \; || true \
     && apk del --purge .build-deps \
     && rm -rf /var/cache/apk/*
 
@@ -136,34 +136,37 @@ FROM alpine:latest
 
 # RUN apk add --no-cache libgcc
 
-# 复制之前编译好的 openresty, luajit 等文件
-COPY --from=builder /usr/local/nginx /usr/local/nginx
-COPY --from=builder /usr/local/luajit /usr/local/luajit
-COPY --from=builder /usr/local/lualib /usr/local/lualib
-COPY --from=builder /usr/local/bin/openresty /usr/local/bin/
-COPY --from=builder /usr/local/luajit/bin/luajit /usr/local/bin/
+# 复制之前编译好的 openresty
+COPY --from=builder /usr/local/openresty /usr/local/openresty
 
 # 软连接库路径等操作
 RUN mkdir -p /usr/local/lib \
-    && ln -sf /usr/local/luajit/lib/libluajit-5.1.so.2 /usr/local/lib/ \
-    && ln -sf /usr/local/luajit/lib/libluajit-5.1.so.2.1.ROLLING /usr/local/lib/ \
+    && ln -sf /usr/local/openresty/luajit/lib/libluajit-5.1.so.2 /usr/local/lib/ \
+    && ln -sf /usr/local/openresty/luajit/lib/libluajit-5.1.so.2.1.ROLLING /usr/local/lib/ \
     # Cleanup unnecessary files
-    # && rm -rf /usr/local/nginx/html \
-    && rm -rf /usr/local/luajit/include \
-    && rm -rf /usr/local/luajit/lib/pkgconfig \
-    && find /usr/local -name "*.a" -delete
+    && rm -rf /usr/local/openresty/luajit/include \
+    && rm -rf /usr/local/openresty/luajit/lib/pkgconfig \
+    && find /usr/local/openresty -name "*.a" -delete
 
-ENV PATH="/usr/local/nginx/sbin:/usr/local/bin:$PATH"
-ENV LUA_PATH="/usr/local/lualib/?.lua;;"
-ENV LUA_CPATH="/usr/local/lualib/?.so;;"
-ENV LD_LIBRARY_PATH="/usr/local/luajit/lib:$LD_LIBRARY_PATH"
+ENV PATH="/usr/local/openresty/nginx/sbin:/usr/local/openresty/bin:$PATH"
+ENV LUA_PATH="/usr/local/openresty/lualib/?.lua;;"
+ENV LUA_CPATH="/usr/local/openresty/lualib/?.so;;"
+ENV LD_LIBRARY_PATH="/usr/local/openresty/luajit/lib:$LD_LIBRARY_PATH"
 
-WORKDIR /usr/local/nginx
+# Add conf.d directory and copy official configuration files
+RUN mkdir -p /etc/nginx/conf.d \
+    && curl -fSL https://github.com/openresty/docker-openresty/raw/refs/heads/master/nginx.conf -o /usr/local/openresty/nginx/conf/nginx.conf \
+    && curl -fSL https://github.com/openresty/docker-openresty/raw/refs/heads/master/nginx.vh.default.conf -o /etc/nginx/conf.d/default.conf
+
+WORKDIR /usr/local/openresty/nginx
 
 # Forward request and error logs to docker log collector
-RUN ln -sf /dev/stdout /usr/local/nginx/logs/access.log \
-    && ln -sf /dev/stderr /usr/local/nginx/logs/error.log \
-    && chown -R nobody:nobody /usr/local/nginx
+RUN ln -sf /dev/stdout /usr/local/openresty/nginx/logs/access.log \
+    && ln -sf /dev/stderr /usr/local/openresty/nginx/logs/error.log \
+    && chown -R nobody:nobody /usr/local/openresty/nginx \
+    && chown -R nobody:nobody /etc/nginx/conf.d
+
+VOLUME ["/usr/local/openresty/nginx/html", "/etc/nginx/conf.d"]
 
 USER nobody
 
