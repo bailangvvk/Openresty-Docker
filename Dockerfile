@@ -134,7 +134,7 @@ RUN  set -eux && apk add --no-cache --virtual .build-deps \
 #         libc.musl-x86_64.so.1 => /lib/ld-musl-x86_64.so.1 (0x7f6c5d80a000)
 FROM alpine:latest
 
-# RUN apk add --no-cache libgcc
+RUN apk add --no-cache libgcc
 
 # 复制之前编译好的 openresty, luajit 等文件
 COPY --from=builder /usr/local/nginx /usr/local/nginx
