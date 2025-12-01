@@ -154,9 +154,12 @@ ENV LUA_CPATH="/usr/local/openresty/lualib/?.so;;"
 ENV LD_LIBRARY_PATH="/usr/local/openresty/luajit/lib:$LD_LIBRARY_PATH"
 
 # Add conf.d directory and copy official configuration files
-RUN mkdir -p /etc/nginx/conf.d \
+RUN apk add --no-cache --virtual .run-deps curl \
+    && mkdir -p /etc/nginx/conf.d \
     && curl -fSL https://github.com/openresty/docker-openresty/raw/refs/heads/master/nginx.conf -o /usr/local/openresty/nginx/conf/nginx.conf \
-    && curl -fSL https://github.com/openresty/docker-openresty/raw/refs/heads/master/nginx.vh.default.conf -o /etc/nginx/conf.d/default.conf
+    && curl -fSL https://github.com/openresty/docker-openresty/raw/refs/heads/master/nginx.vh.default.conf -o /etc/nginx/conf.d/default.conf \
+    && apk del --purge .run-deps \
+    && rm -rf /var/cache/apk/*
 
 WORKDIR /usr/local/openresty/nginx
 
