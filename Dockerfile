@@ -136,7 +136,12 @@ COPY --from=builder /usr/local/luajit/bin/luajit /usr/local/bin/
 # 软连接库路径等操作
 RUN mkdir -p /usr/local/lib \
     && ln -sf /usr/local/luajit/lib/libluajit-5.1.so.2 /usr/local/lib/ \
-    && ln -sf /usr/local/luajit/lib/libluajit-5.1.so.2.1.ROLLING /usr/local/lib/
+    && ln -sf /usr/local/luajit/lib/libluajit-5.1.so.2.1.ROLLING /usr/local/lib/ \
+    # Cleanup unnecessary files
+    # && rm -rf /usr/local/nginx/html \
+    && rm -rf /usr/local/luajit/include \
+    && rm -rf /usr/local/luajit/lib/pkgconfig \
+    && find /usr/local -name "*.a" -delete
 
 ENV PATH="/usr/local/nginx/sbin:/usr/local/bin:$PATH"
 ENV LUA_PATH="/usr/local/lualib/?.lua;;"
