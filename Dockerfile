@@ -124,8 +124,6 @@ RUN  set -eux && apk add --no-cache --virtual .build-deps \
 
 FROM alpine:latest
 
-RUN apk add --no-cache libgcc
-
 # 复制之前编译好的 openresty, luajit 等文件
 COPY --from=builder /usr/local/nginx /usr/local/nginx
 COPY --from=builder /usr/local/luajit /usr/local/luajit
