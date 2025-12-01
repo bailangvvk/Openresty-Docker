@@ -45,7 +45,8 @@ RUN cd openresty-${OPENRESTY_VERSION} && \
       \
       # 核心编译选项：静态链接所有库
       --with-cc-opt="-static -static-libgcc -O2" \
-      --with-ld-opt="-static" \
+      # 关键修复：添加 -rdynamic 以保留 FFI 所需的符号
+      --with-ld-opt="-static -rdynamic" \
       \
       # 指向我们下载的依赖源码
       --with-openssl=../openssl-${OPENSSL_VERSION} \
@@ -79,7 +80,7 @@ RUN cd openresty-${OPENRESTY_VERSION} && \
     make -j$(nproc) && \
     make install
 
-# 剥离库文件以减小体积，但保留 nginx 主程序的符号以支持 FFI
+# 剥离库文件以减小体积
 RUN strip /usr/local/openresty/luajit/bin/luajit-*.*/luajit || true && \
     find /usr/local/openresty/ -name "*.so" -exec strip {} \; || true
 
