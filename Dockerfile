@@ -70,7 +70,7 @@ RUN cd openresty-${OPENRESTY_VERSION} && \
       --without-mail_pop3_module \
       --without-mail_imap_module \
       --without-mail_smtp_module \
-      --without-stream_module \
+    #   --without-stream_module \
     && \
     make -j$(nproc) && \
     make install
