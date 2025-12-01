@@ -122,9 +122,17 @@ RUN  set -eux && apk add --no-cache --virtual .build-deps \
     && apk del --purge .build-deps \
     && rm -rf /var/cache/apk/*
 
-# FROM alpine:latest
-# 这是一个更现代的、同样轻量级的 C 库，以简洁、高效、标准兼容和安全著称。和 Alpine Linux 使用的完全相同的C 库。
-FROM busybox:musl
+# FROM busybox:musl
+# busybox:musl 镜像非常小，但缺少 nginx 运行所需的动态链接库，所以换回 alpine
+# 如果非要用 busybox:musl，需要把依赖的 so 库都复制到镜像里
+# ldd /usr/local/nginx/sbin/nginx
+#         /lib/ld-musl-x86_64.so.1 (0x7f6c5d80a000)
+#         libpcre2-8.so.0 => /usr/local/lib/libpcre2-8.so.0 (0x7f6c5d763000)
+#         libssl.so.3 => /usr/lib/libssl.so.3 (0x7f6c5d6b9000)
+#         libcrypto.so.3 => /usr/lib/libcrypto.so.3 (0x7f6c5d289000)
+#         libz.so.1 => /lib/libz.so.1 (0x7f6c5d26e000)
+#         libc.musl-x86_64.so.1 => /lib/ld-musl-x86_64.so.1 (0x7f6c5d80a000)
+FROM alpine:latest
 
 # RUN apk add --no-cache libgcc
 
